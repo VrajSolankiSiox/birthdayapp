@@ -1,63 +1,79 @@
-import Image from "next/image";
+"use client";
+
+import { useEffect, useState } from "react";
+import { BirthdayForm } from "./components/BirthdayForm";
+import { BirthdayList } from "./components/BirthdayList";
 
 export default function Home() {
+  const [birthdays, setBirthdays] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchBirthdays = async () => {
+    try {
+      const res = await fetch("/api/birthdays");
+      const json = await res.json();
+      if (json.success) {
+        setBirthdays(json.data);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchBirthdays();
+  }, []);
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+    <div className="min-h-screen bg-[#F8F9FA] text-[#1E293B] font-sans selection:bg-[#ec4899] selection:text-white pb-24">
+      {/* Navbar area */}
+      <nav className="w-full bg-white border-b border-gray-100 shadow-[0_2px_10px_rgb(0,0,0,0.02)] py-5 px-6 mb-12">
+        <div className="max-w-6xl mx-auto flex items-center gap-3">
+          {/* <div className="w-10 h-10 bg-[#ec4899] rounded-xl shadow-lg shadow-[#ec4899]/20 flex items-center justify-center text-white font-bold text-xl">
+            B
+          </div> */}
+          <svg width={40} height={40} viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="40" y="90" width="120" height="60" rx="12" fill="#ec4899" />
+            <rect x="55" y="60" width="90" height="40" rx="10" fill="#f472b6" />
+            <path d="M55 60 C60 80, 70 80, 75 60 C80 80, 90 80, 95 60 C100 80, 110 80, 115 60 C120 80, 130 80, 135 60" stroke="#ec4899" strokeWidth="6" fill="none" />
+            <rect x="95" y="30" width="10" height="30" rx="3" fill="#ec4899" />
+            <path d="M100 20 C95 25, 95 35, 100 40 C105 35, 105 25, 100 20Z" fill="#fbbf24" />
+            <circle cx="70" cy="120" r="4" fill="white" />
+            <circle cx="100" cy="130" r="4" fill="white" />
+            <circle cx="130" cy="120" r="4" fill="white" />
+          </svg>
+
+          <h1 className="text-2xl font-black tracking-tight text-gray-900">
+            Birthday App
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+      </nav>
+
+      <main className="max-w-6xl mx-auto px-6">
+        <header className="mb-12 max-w-2xl">
+          <h2 className="text-4xl md:text-5xl font-extrabold mb-4 tracking-tight text-gray-900 leading-tight">
+            Manage your team's <span className="text-[#ec4899]">special days</span> with ease.
+          </h2>
+          <p className="text-lg text-gray-500 font-medium">
+            Keep track of upcoming birthdays, age calculations, and totally automate your greeting emails.
+          </p>
+        </header>
+
+        <div className="grid md:grid-cols-[1.1fr_1.3fr] gap-8 xl:gap-12 items-start">
+          <div className="sticky top-6">
+            <BirthdayForm onAdd={fetchBirthdays} />
+          </div>
+          <div className="h-full">
+            {loading ? (
+              <div className="bg-white rounded-3xl p-8 flex flex-col items-center justify-center h-[500px] shadow-[0_20px_40px_rgb(0,0,0,0.04)] border border-gray-100">
+                <div className="w-10 h-10 border-4 border-gray-100 border-t-[#ec4899] rounded-full animate-spin"></div>
+              </div>
+            ) : (
+              <BirthdayList birthdays={birthdays} />
+            )}
+          </div>
         </div>
       </main>
     </div>
