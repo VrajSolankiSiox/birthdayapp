@@ -32,7 +32,7 @@ export function BirthdayList({ birthdays }: { birthdays: Birthday[] }) {
   return (
     <div className="bg-white border border-gray-100 rounded-3xl p-8 shadow-[0_20px_40px_rgb(0,0,0,0.04)] h-full flex flex-col">
       <div className="flex items-center gap-3 mb-8 pb-5 border-b border-gray-100">
-        <div className="bg-[#ec4899]/10 text-[#ec4899] p-3 rounded-2xl">
+        <div className="bg-[#FF3737]/10 text-[#FF3737] p-3 rounded-2xl">
           <FolderHeart className="w-5 h-5" />
         </div>
         <div>
@@ -59,12 +59,12 @@ export function BirthdayList({ birthdays }: { birthdays: Birthday[] }) {
               <div
                 key={b.id}
                 className={`group flex flex-col sm:flex-row sm:items-center justify-between p-5 rounded-2xl transition-all border ${isToday
-                  ? 'border-[#ec4899]/20 bg-[#ec4899]/[0.03] shadow-sm shadow-[#ec4899]/5'
+                  ? 'border-[#FF3737]/20 bg-[#FF3737]/[0.03] shadow-sm shadow-[#FF3737]/5'
                   : 'border-gray-100 hover:border-gray-200 hover:shadow-sm hover:shadow-gray-100/50 bg-white'
                   }`}
               >
                 <div className="flex gap-4 items-center">
-                  <div className={`w-14 h-14 rounded-2xl flex flex-col items-center justify-center font-bold shadow-sm ${isToday ? 'bg-[#ec4899] text-white shadow-lg shadow-[#ec4899]/30' : 'bg-gray-50 text-gray-900 border border-gray-100'
+                  <div className={`w-14 h-14 rounded-2xl flex flex-col items-center justify-center font-bold shadow-sm ${isToday ? 'bg-[#FF3737] text-white shadow-lg shadow-[#FF3737]/30' : 'bg-gray-50 text-gray-900 border border-gray-100'
                     }`}>
                     <span className="text-[10px] uppercase opacity-80 leading-none mb-1 tracking-wider">{getMonthName(b.month)}</span>
                     <span className="text-xl leading-none">{b.day}</span>
@@ -76,7 +76,7 @@ export function BirthdayList({ birthdays }: { birthdays: Birthday[] }) {
                         {b.name}
                       </h3>
                       {isToday && (
-                        <span className="text-[10px] font-black tracking-wider uppercase bg-[#ec4899]/10 text-[#ec4899] px-2 py-0.5 rounded-md">
+                        <span className="text-[10px] font-black tracking-wider uppercase bg-[#FF3737]/10 text-[#FF3737] px-2 py-0.5 rounded-md">
                           TODAY
                         </span>
                       )}
@@ -106,7 +106,7 @@ export function BirthdayList({ birthdays }: { birthdays: Birthday[] }) {
                       In {daysUntil} days
                     </span>
                   ) : (
-                    <span className="text-sm font-bold text-[#ec4899]">
+                    <span className="text-sm font-bold text-[#FF3737]">
                       🎉 Time to celebrate
                     </span>
                   )}

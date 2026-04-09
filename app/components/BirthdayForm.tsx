@@ -30,10 +30,10 @@ const CustomDropdown = ({ value, onChange, options, placeholder, icon, errorStat
   return (
     <div className="relative w-full" ref={dropdownRef}>
       {icon && <div className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 z-10">{icon}</div>}
-      
-      <div 
+
+      <div
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-full bg-gray-50/50 border ${errorStatus ? 'border-red-400 focus:ring-red-400' : 'border-gray-200 focus:border-[#ec4899] focus:ring-[#ec4899]/10'} rounded-2xl py-3.5 ${icon ? 'pl-12' : 'pl-4'} pr-10 text-gray-900 focus:outline-none focus:bg-white focus:ring-4 transition-all font-medium cursor-pointer flex items-center select-none shadow-sm shadow-gray-100/50`}
+        className={`w-full bg-gray-50/50 border ${errorStatus ? 'border-red-400 focus:ring-red-400' : 'border-gray-200 focus:border-[#FF3737] focus:ring-[#FF3737]/10'} rounded-2xl py-3.5 ${icon ? 'pl-12' : 'pl-4'} pr-10 text-gray-900 focus:outline-none focus:bg-white focus:ring-4 transition-all font-medium cursor-pointer flex items-center select-none shadow-sm shadow-gray-100/50`}
       >
         <span className={selectedOption ? "text-gray-900 block truncate" : "text-gray-400 truncate block"}>
           {selectedOption ? selectedOption.label : placeholder}
@@ -50,10 +50,10 @@ const CustomDropdown = ({ value, onChange, options, placeholder, icon, errorStat
                 onChange(opt.value);
                 setIsOpen(false);
               }}
-              className="px-4 py-2.5 mx-2 rounded-xl text-sm font-medium hover:bg-[#ec4899]/5 hover:text-[#ec4899] cursor-pointer flex items-center justify-between text-gray-700 transition-colors"
+              className="px-4 py-2.5 mx-2 rounded-xl text-sm font-medium hover:bg-[#FF3737]/5 hover:text-[#FF3737] cursor-pointer flex items-center justify-between text-gray-700 transition-colors"
             >
               <span className="truncate">{opt.label}</span>
-              {value === opt.value && <Check className="w-4 h-4 text-[#ec4899]" />}
+              {value === opt.value && <Check className="w-4 h-4 text-[#FF3737]" />}
             </div>
           ))}
         </div>
@@ -100,7 +100,7 @@ export function BirthdayForm({ onAdd }: { onAdd: () => void }) {
       const daysInSelectedMonth = getDaysInMonth(formData.month, formData.year);
       const chosenDay = parseInt(formData.day);
       if (chosenDay < 1 || chosenDay > daysInSelectedMonth) {
-         throw new Error(`The day must be between 1 and ${daysInSelectedMonth} for the selected month!`);
+        throw new Error(`The day must be between 1 and ${daysInSelectedMonth} for the selected month!`);
       }
 
       const payload = {
@@ -142,18 +142,18 @@ export function BirthdayForm({ onAdd }: { onAdd: () => void }) {
     const num = parseInt(val);
     const max = getDaysInMonth(formData.month, formData.year);
     if (num > max) {
-        setFormData({ ...formData, day: String(max) });
+      setFormData({ ...formData, day: String(max) });
     } else if (num < 1) {
-        setFormData({ ...formData, day: "1" });
+      setFormData({ ...formData, day: "1" });
     } else {
-        setFormData({ ...formData, day: val });
+      setFormData({ ...formData, day: val });
     }
   };
 
   return (
     <div className="bg-white border border-gray-100 rounded-3xl p-8 shadow-[0_20px_40px_rgb(0,0,0,0.04)] relative z-10">
       <div className="flex items-center gap-3 mb-8">
-        <div className="bg-[#ec4899]/10 text-[#ec4899] p-3 rounded-2xl">
+        <div className="bg-[#FF3737]/10 text-[#FF3737] p-3 rounded-2xl">
           <Sparkles className="w-5 h-5" />
         </div>
         <h2 className="text-2xl font-bold text-gray-900 tracking-tight">
@@ -163,13 +163,13 @@ export function BirthdayForm({ onAdd }: { onAdd: () => void }) {
 
       <form onSubmit={handleSubmit} className="space-y-5">
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">Full Name <span className="text-[#ec4899]">*</span></label>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">Full Name <span className="text-[#FF3737]">*</span></label>
           <div className="relative">
             <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
             <input
               required
               type="text"
-              className="w-full bg-gray-50/50 border border-gray-200 rounded-2xl py-3.5 pl-12 pr-4 text-gray-900 focus:outline-none focus:bg-white focus:border-[#ec4899] focus:ring-4 focus:ring-[#ec4899]/10 transition-all font-medium shadow-sm shadow-gray-100/50"
+              className="w-full bg-gray-50/50 border border-gray-200 rounded-2xl py-3.5 pl-12 pr-4 text-gray-900 focus:outline-none focus:bg-white focus:border-[#FF3737] focus:ring-4 focus:ring-[#FF3737]/10 transition-all font-medium shadow-sm shadow-gray-100/50"
               value={formData.name}
               placeholder="E.g. John Doe"
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
@@ -179,31 +179,31 @@ export function BirthdayForm({ onAdd }: { onAdd: () => void }) {
 
         <div className="grid grid-cols-[1.3fr_1fr_1fr] gap-3">
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">Month <span className="text-[#ec4899]">*</span></label>
-             <CustomDropdown 
-                options={MONTH_OPTIONS}
-                value={formData.month}
-                onChange={(val: string) => {
-                    const newMax = getDaysInMonth(val, formData.year);
-                    const currentDay = parseInt(formData.day);
-                    setFormData(prev => ({ 
-                        ...prev, 
-                        month: val,
-                        day: currentDay > newMax ? String(newMax) : prev.day
-                    }));
-                }}
-                placeholder="Select Month"
-             />
+            <label className="block text-sm font-semibold text-gray-700 mb-2">Month <span className="text-[#FF3737]">*</span></label>
+            <CustomDropdown
+              options={MONTH_OPTIONS}
+              value={formData.month}
+              onChange={(val: string) => {
+                const newMax = getDaysInMonth(val, formData.year);
+                const currentDay = parseInt(formData.day);
+                setFormData(prev => ({
+                  ...prev,
+                  month: val,
+                  day: currentDay > newMax ? String(newMax) : prev.day
+                }));
+              }}
+              placeholder="Select Month"
+            />
           </div>
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">Day <span className="text-[#ec4899]">*</span></label>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">Day <span className="text-[#FF3737]">*</span></label>
             <input
               required
               type="number"
               min="1"
               max={getDaysInMonth(formData.month, formData.year)}
               placeholder="DD"
-              className="w-full bg-gray-50/50 border border-gray-200 rounded-2xl py-3.5 px-4 text-gray-900 focus:outline-none focus:bg-white focus:border-[#ec4899] focus:ring-4 focus:ring-[#ec4899]/10 transition-all font-medium shadow-sm shadow-gray-100/50"
+              className="w-full bg-gray-50/50 border border-gray-200 rounded-2xl py-3.5 px-4 text-gray-900 focus:outline-none focus:bg-white focus:border-[#FF3737] focus:ring-4 focus:ring-[#FF3737]/10 transition-all font-medium shadow-sm shadow-gray-100/50"
               value={formData.day}
               onChange={handleDayChange}
             />
@@ -213,31 +213,31 @@ export function BirthdayForm({ onAdd }: { onAdd: () => void }) {
             <input
               type="number"
               placeholder="YYYY"
-              className="w-full bg-gray-50/50 border border-gray-200 rounded-2xl py-3.5 px-4 text-gray-900 focus:outline-none focus:bg-white focus:border-[#ec4899] focus:ring-4 focus:ring-[#ec4899]/10 transition-all font-medium shadow-sm shadow-gray-100/50"
+              className="w-full bg-gray-50/50 border border-gray-200 rounded-2xl py-3.5 px-4 text-gray-900 focus:outline-none focus:bg-white focus:border-[#FF3737] focus:ring-4 focus:ring-[#FF3737]/10 transition-all font-medium shadow-sm shadow-gray-100/50"
               value={formData.year}
               onChange={(e) => {
-                  const val = e.target.value;
-                  const newMax = getDaysInMonth(formData.month, val);
-                  const currentDay = parseInt(formData.day);
-                  setFormData(prev => ({ 
-                      ...prev, 
-                      year: val,
-                      day: currentDay > newMax ? String(newMax) : prev.day
-                  }));
+                const val = e.target.value;
+                const newMax = getDaysInMonth(formData.month, val);
+                const currentDay = parseInt(formData.day);
+                setFormData(prev => ({
+                  ...prev,
+                  year: val,
+                  day: currentDay > newMax ? String(newMax) : prev.day
+                }));
               }}
             />
           </div>
         </div>
 
         <div>
-           <label className="block text-sm font-semibold text-gray-700 mb-2">Gender <span className="text-gray-400 font-normal">(Opt)</span></label>
-           <CustomDropdown 
-                icon={<UserRound />}
-                options={GENDER_OPTIONS}
-                value={formData.gender}
-                onChange={(val: string) => setFormData({ ...formData, gender: val })}
-                placeholder="Select Gender"
-             />
+          <label className="block text-sm font-semibold text-gray-700 mb-2">Gender <span className="text-gray-400 font-normal">(Opt)</span></label>
+          <CustomDropdown
+            icon={<UserRound />}
+            options={GENDER_OPTIONS}
+            value={formData.gender}
+            onChange={(val: string) => setFormData({ ...formData, gender: val })}
+            placeholder="Select Gender"
+          />
         </div>
 
         {error && (
@@ -247,24 +247,24 @@ export function BirthdayForm({ onAdd }: { onAdd: () => void }) {
         )}
 
         {success && (
-          <div className="bg-[#ec4899]/5 text-[#ec4899] text-sm font-semibold p-4 rounded-xl border border-[#ec4899]/20 flex items-center gap-2 animate-in fade-in slide-in-from-top-2">
+          <div className="bg-[#FF3737]/5 text-[#FF3737] text-sm font-semibold p-4 rounded-xl border border-[#FF3737]/20 flex items-center gap-2 animate-in fade-in slide-in-from-top-2">
             <Sparkles className="w-4 h-4" /> Contact successfully saved!
           </div>
         )}
 
         <div className="pt-2">
-            <button
+          <button
             disabled={loading}
-            className="w-full bg-[#ec4899] hover:bg-[#be185d] text-white font-semibold rounded-2xl py-4 transition-all hover:shadow-[0_8px_20px_rgb(236,72,153,0.3)] hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2 relative shadow-lg shadow-[#ec4899]/20"
-            >
+            className="w-full bg-[#FF3737] hover:bg-[#db0d0d] text-white font-semibold rounded-2xl py-4 transition-all hover:shadow-[0_8px_20px_rgb(236,72,153,0.3)] hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2 relative shadow-lg shadow-[#FF3737]/20"
+          >
             {loading ? (
-                <Loader2 className="w-5 h-5 animate-spin" />
+              <Loader2 className="w-5 h-5 animate-spin" />
             ) : (
-                <>
+              <>
                 Save Contact
-                </>
+              </>
             )}
-            </button>
+          </button>
         </div>
       </form>
     </div>
