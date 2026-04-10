@@ -72,7 +72,7 @@ export async function GET(req: Request) {
     // 5. Send Emails
     let emailsSent = 0;
     const targetEmailEnv = process.env.TARGET_EMAIL;
-    
+
     if (!targetEmailEnv) {
       return NextResponse.json({ success: false, message: 'TARGET_EMAIL is not configured in .env' });
     }
@@ -83,7 +83,7 @@ export async function GET(req: Request) {
       const dayWord = alert.isToday ? "today" : "tomorrow";
       const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
       const dateText = `${monthNames[alert.month - 1]} ${alert.day}`;
-      
+
       // Dynamic Theme
       const titleColor = alert.isToday ? "#ff6b6b" : "#f97316";
       const bgColor = alert.isToday ? "#fff0f0" : "#fff9f0";
@@ -95,7 +95,7 @@ export async function GET(req: Request) {
           from: process.env.GOOGLE_EMAIL,
           to: targetEmail,
           subject: subjectText,
-          text: `Hi Team,\n\nJust a quick reminder that ${dayWord} (${dateText}) is ${alert.name}'s Birthday!\n\nBest regards,\nCrafted with ❤️ by Vraj`,
+          text: `Hi Team,\n\nJust a quick reminder that ${dayWord} (${dateText}) is ${alert.name}'s Birthday!\n\nBest regards,\nCrafted by Vraj`,
           html: `<!DOCTYPE html>
                   <html>
                   <head>
@@ -123,7 +123,7 @@ export async function GET(req: Request) {
                         
                         <p style="font-size: 13px; color: #aaa;">
                           Best regards,<br/>
-                          <strong>Crafted with ❤️ by Vraj</strong>
+                          <strong>Crafted by Vraj</strong>
                         </p>
                       
                       </div>
