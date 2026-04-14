@@ -17,3 +17,18 @@ model Birthday {
   email     String?
   createdAt DateTime @default(now())
 }
+
+model Anniversary {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  email     String
+  company   String
+  jobTitle  String
+  department String
+  month     Int
+  day       Int
+  year      Int?
+  createdAt DateTime @default(now())
+
+  @@map("anniversaries")
+}

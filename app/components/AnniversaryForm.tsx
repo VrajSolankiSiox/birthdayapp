@@ -6,16 +6,18 @@ import {
   User,
   Loader2,
   Sparkles,
-  UserRound,
   ChevronDown,
   Check,
+  Briefcase,
+  Mail,
+  Building2,
 } from "lucide-react";
 
 // Helper for days in month
 const getDaysInMonth = (monthStr: string, yearStr: string) => {
   if (!monthStr) return 31;
   const m = parseInt(monthStr);
-  const y = yearStr ? parseInt(yearStr) : new Date().getFullYear(); // default to current year for leap year math if no year given
+  const y = yearStr ? parseInt(yearStr) : new Date().getFullYear();
   return new Date(y, m, 0).getDate();
 };
 
@@ -55,7 +57,7 @@ const CustomDropdown = ({
 
       <div
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-full bg-gray-50/50 border ${errorStatus ? "border-red-400 focus:ring-red-400" : "border-gray-200 focus:border-[#FF3737] focus:ring-[#FF3737]/10"} rounded-2xl py-3.5 ${icon ? "pl-12" : "pl-4"} pr-10 text-gray-900 focus:outline-none focus:bg-white focus:ring-4 transition-all font-medium cursor-pointer flex items-center select-none shadow-sm shadow-gray-100/50`}
+        className={`w-full bg-gray-50/50 border ${errorStatus ? "border-red-400 focus:ring-red-400" : "border-gray-200 focus:border-[#4f46e5] focus:ring-[#4f46e5]/10"} rounded-2xl py-3.5 ${icon ? "pl-12" : "pl-4"} pr-10 text-gray-900 focus:outline-none focus:bg-white focus:ring-4 transition-all font-medium cursor-pointer flex items-center select-none shadow-sm shadow-gray-100/50`}
       >
         <span
           className={
@@ -80,11 +82,11 @@ const CustomDropdown = ({
                 onChange(opt.value);
                 setIsOpen(false);
               }}
-              className="px-4 py-2.5 mx-2 rounded-xl text-sm font-medium hover:bg-[#FF3737]/5 hover:text-[#FF3737] cursor-pointer flex items-center justify-between text-gray-700 transition-colors"
+              className="px-4 py-2.5 mx-2 rounded-xl text-sm font-medium hover:bg-[#4f46e5]/5 hover:text-[#4f46e5] cursor-pointer flex items-center justify-between text-gray-700 transition-colors"
             >
               <span className="truncate">{opt.label}</span>
               {value === opt.value && (
-                <Check className="w-4 h-4 text-[#FF3737]" />
+                <Check className="w-4 h-4 text-[#4f46e5]" />
               )}
             </div>
           ))}
@@ -94,13 +96,16 @@ const CustomDropdown = ({
   );
 };
 
-export function BirthdayForm({ onAdd }: { onAdd: () => void }) {
+export function AnniversaryForm({ onAdd }: { onAdd: () => void }) {
   const [formData, setFormData] = useState({
     name: "",
+    email: "",
+    company: "",
+    jobTitle: "",
+    department: "",
     month: "",
     day: "",
     year: "",
-    gender: "",
   });
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -111,12 +116,6 @@ export function BirthdayForm({ onAdd }: { onAdd: () => void }) {
     label: new Date(2000, i).toLocaleString("default", { month: "long" }),
   }));
 
-  const GENDER_OPTIONS = [
-    { value: "Male", label: "Male" },
-    { value: "Female", label: "Female" },
-    { value: "Other", label: "Other" },
-  ];
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -124,8 +123,13 @@ export function BirthdayForm({ onAdd }: { onAdd: () => void }) {
     setSuccess(false);
 
     try {
-      if (!formData.name || !formData.month || !formData.day) {
-        throw new Error("Name, month, and day are required.");
+      if (
+        !formData.jobTitle ||
+        !formData.department ||
+        !formData.month ||
+        !formData.day
+      ) {
+        throw new Error("Job Title, Department, Month, and Day are required.");
       }
 
       // Date Validation
@@ -138,24 +142,36 @@ export function BirthdayForm({ onAdd }: { onAdd: () => void }) {
       }
 
       const payload = {
-        name: formData.name,
+        name: formData.name || "N/A",
+        email: formData.email || "N/A",
+        company: formData.company || "N/A",
+        jobTitle: formData.jobTitle,
+        department: formData.department,
         month: formData.month,
         day: formData.day,
         year: formData.year || undefined,
-        gender: formData.gender,
       };
 
-      const res = await fetch("/api/birthdays", {
+      const res = await fetch("/api/anniversaries", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to save birthday");
+      if (!res.ok) throw new Error(data.error || "Failed to save anniversary");
 
       setSuccess(true);
-      setFormData({ name: "", month: "", day: "", year: "", gender: "" });
+      setFormData({
+        name: "",
+        email: "",
+        company: "",
+        jobTitle: "",
+        department: "",
+        month: "",
+        day: "",
+        year: "",
+      });
       onAdd();
 
       setTimeout(() => setSuccess(false), 3000);
@@ -166,7 +182,6 @@ export function BirthdayForm({ onAdd }: { onAdd: () => void }) {
     }
   };
 
-  // Live constraint for day input
   const handleDayChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
     if (val === "") {
@@ -187,25 +202,24 @@ export function BirthdayForm({ onAdd }: { onAdd: () => void }) {
   return (
     <div className="bg-white border border-gray-100 rounded-3xl p-8 shadow-[0_20px_40px_rgb(0,0,0,0.04)] relative z-10">
       <div className="flex items-center gap-3 mb-8">
-        <div className="bg-[#FF3737]/10 text-[#FF3737] p-3 rounded-2xl">
+        <div className="bg-[#4f46e5]/10 text-[#4f46e5] p-3 rounded-2xl">
           <Sparkles className="w-5 h-5" />
         </div>
         <h2 className="text-2xl font-bold text-gray-900 tracking-tight">
-          Add Birthday
+          Add Work Anniversary
         </h2>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-5">
         <div>
           <label className="block text-sm font-semibold text-gray-700 mb-2">
-            Full Name <span className="text-[#FF3737]">*</span>
+            Full Name <span className="text-gray-400 font-normal">(Opt)</span>
           </label>
           <div className="relative">
             <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
             <input
-              required
               type="text"
-              className="w-full bg-gray-50/50 border border-gray-200 rounded-2xl py-3.5 pl-12 pr-4 text-gray-900 focus:outline-none focus:bg-white focus:border-[#FF3737] focus:ring-4 focus:ring-[#FF3737]/10 transition-all font-medium shadow-sm shadow-gray-100/50"
+              className="w-full bg-gray-50/50 border border-gray-200 rounded-2xl py-3.5 pl-12 pr-4 text-gray-900 focus:outline-none focus:bg-white focus:border-[#4f46e5] focus:ring-4 focus:ring-[#4f46e5]/10 transition-all font-medium shadow-sm shadow-gray-100/50"
               value={formData.name}
               placeholder="E.g. John Doe"
               onChange={(e) =>
@@ -215,10 +229,81 @@ export function BirthdayForm({ onAdd }: { onAdd: () => void }) {
           </div>
         </div>
 
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
+            Email <span className="text-gray-400 font-normal">(Opt)</span>
+          </label>
+          <div className="relative">
+            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <input
+              type="email"
+              className="w-full bg-gray-50/50 border border-gray-200 rounded-2xl py-3.5 pl-12 pr-4 text-gray-900 focus:outline-none focus:bg-white focus:border-[#4f46e5] focus:ring-4 focus:ring-[#4f46e5]/10 transition-all font-medium shadow-sm shadow-gray-100/50"
+              value={formData.email}
+              placeholder="john@company.com"
+              onChange={(e) =>
+                setFormData({ ...formData, email: e.target.value })
+              }
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
+            Company <span className="text-gray-400 font-normal">(Opt)</span>
+          </label>
+          <div className="relative">
+            <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <input
+              type="text"
+              className="w-full bg-gray-50/50 border border-gray-200 rounded-2xl py-3.5 pl-12 pr-4 text-gray-900 focus:outline-none focus:bg-white focus:border-[#4f46e5] focus:ring-4 focus:ring-[#4f46e5]/10 transition-all font-medium shadow-sm shadow-gray-100/50"
+              value={formData.company}
+              placeholder="E.g. Tech Corp"
+              onChange={(e) =>
+                setFormData({ ...formData, company: e.target.value })
+              }
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
+            Job Title <span className="text-[#4f46e5]">*</span>
+          </label>
+          <div className="relative">
+            <Briefcase className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <input
+              required
+              type="text"
+              className="w-full bg-gray-50/50 border border-gray-200 rounded-2xl py-3.5 pl-12 pr-4 text-gray-900 focus:outline-none focus:bg-white focus:border-[#4f46e5] focus:ring-4 focus:ring-[#4f46e5]/10 transition-all font-medium shadow-sm shadow-gray-100/50"
+              value={formData.jobTitle}
+              placeholder="E.g. Senior Developer"
+              onChange={(e) =>
+                setFormData({ ...formData, jobTitle: e.target.value })
+              }
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
+            Department <span className="text-[#4f46e5]">*</span>
+          </label>
+          <input
+            required
+            type="text"
+            className="w-full bg-gray-50/50 border border-gray-200 rounded-2xl py-3.5 px-4 text-gray-900 focus:outline-none focus:bg-white focus:border-[#4f46e5] focus:ring-4 focus:ring-[#4f46e5]/10 transition-all font-medium shadow-sm shadow-gray-100/50"
+            value={formData.department}
+            placeholder="E.g. Technology, Healthcare"
+            onChange={(e) =>
+              setFormData({ ...formData, department: e.target.value })
+            }
+          />
+        </div>
+
         <div className="grid grid-cols-[1.3fr_1fr_1fr] gap-3">
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Month <span className="text-[#FF3737]">*</span>
+              Month <span className="text-[#4f46e5]">*</span>
             </label>
             <CustomDropdown
               options={MONTH_OPTIONS}
@@ -237,7 +322,7 @@ export function BirthdayForm({ onAdd }: { onAdd: () => void }) {
           </div>
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Day <span className="text-[#FF3737]">*</span>
+              Day <span className="text-[#4f46e5]">*</span>
             </label>
             <input
               required
@@ -245,7 +330,7 @@ export function BirthdayForm({ onAdd }: { onAdd: () => void }) {
               min="1"
               max={getDaysInMonth(formData.month, formData.year)}
               placeholder="DD"
-              className="w-full bg-gray-50/50 border border-gray-200 rounded-2xl py-3.5 px-4 text-gray-900 focus:outline-none focus:bg-white focus:border-[#FF3737] focus:ring-4 focus:ring-[#FF3737]/10 transition-all font-medium shadow-sm shadow-gray-100/50"
+              className="w-full bg-gray-50/50 border border-gray-200 rounded-2xl py-3.5 px-4 text-gray-900 focus:outline-none focus:bg-white focus:border-[#4f46e5] focus:ring-4 focus:ring-[#4f46e5]/10 transition-all font-medium shadow-sm shadow-gray-100/50"
               value={formData.day}
               onChange={handleDayChange}
             />
@@ -257,7 +342,7 @@ export function BirthdayForm({ onAdd }: { onAdd: () => void }) {
             <input
               type="number"
               placeholder="YYYY"
-              className="w-full bg-gray-50/50 border border-gray-200 rounded-2xl py-3.5 px-4 text-gray-900 focus:outline-none focus:bg-white focus:border-[#FF3737] focus:ring-4 focus:ring-[#FF3737]/10 transition-all font-medium shadow-sm shadow-gray-100/50"
+              className="w-full bg-gray-50/50 border border-gray-200 rounded-2xl py-3.5 px-4 text-gray-900 focus:outline-none focus:bg-white focus:border-[#4f46e5] focus:ring-4 focus:ring-[#4f46e5]/10 transition-all font-medium shadow-sm shadow-gray-100/50"
               value={formData.year}
               onChange={(e) => {
                 const val = e.target.value;
@@ -273,21 +358,6 @@ export function BirthdayForm({ onAdd }: { onAdd: () => void }) {
           </div>
         </div>
 
-        <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
-            Gender <span className="text-gray-400 font-normal">(Opt)</span>
-          </label>
-          <CustomDropdown
-            icon={<UserRound />}
-            options={GENDER_OPTIONS}
-            value={formData.gender}
-            onChange={(val: string) =>
-              setFormData({ ...formData, gender: val })
-            }
-            placeholder="Select Gender"
-          />
-        </div>
-
         {error && (
           <div className="bg-red-50 text-red-600 text-sm font-semibold p-4 rounded-xl border border-red-100 animate-in fade-in slide-in-from-top-2">
             {error}
@@ -295,20 +365,20 @@ export function BirthdayForm({ onAdd }: { onAdd: () => void }) {
         )}
 
         {success && (
-          <div className="bg-[#FF3737]/5 text-[#FF3737] text-sm font-semibold p-4 rounded-xl border border-[#FF3737]/20 flex items-center gap-2 animate-in fade-in slide-in-from-top-2">
-            <Sparkles className="w-4 h-4" /> Contact successfully saved!
+          <div className="bg-[#4f46e5]/5 text-[#4f46e5] text-sm font-semibold p-4 rounded-xl border border-[#4f46e5]/20 flex items-center gap-2 animate-in fade-in slide-in-from-top-2">
+            <Sparkles className="w-4 h-4" /> Anniversary successfully saved!
           </div>
         )}
 
         <div className="pt-2">
           <button
             disabled={loading}
-            className="w-full bg-[#FF3737] hover:bg-[#db0d0d] text-white font-semibold rounded-2xl py-4 transition-all hover:shadow-[0_8px_20px_rgb(236,72,153,0.3)] hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2 relative shadow-lg shadow-[#FF3737]/20"
+            className="w-full bg-[#4f46e5] hover:bg-[#4338ca] text-white font-semibold rounded-2xl py-4 transition-all hover:shadow-[0_8px_20px_rgb(79,70,229,0.3)] hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2 relative shadow-lg shadow-[#4f46e5]/20"
           >
             {loading ? (
               <Loader2 className="w-5 h-5 animate-spin" />
             ) : (
-              <>Save Contact</>
+              <>Save Anniversary</>
             )}
           </button>
         </div>
