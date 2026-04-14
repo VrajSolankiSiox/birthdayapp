@@ -27,7 +27,7 @@ export async function GET() {
           find: collection,
           filter: {},
           sort: { month: 1, day: 1 },
-        });
+        }) as any;
 
         const docs = result?.cursor?.firstBatch;
         if (Array.isArray(docs) && docs.length > 0) {

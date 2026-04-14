@@ -38,7 +38,7 @@ export async function GET(req: Request) {
           find: collection,
           filter: { month: tMonth, day: tDay },
           sort: { month: 1, day: 1 },
-        });
+        }) as any;
 
         const docsTodayBatch = resultToday?.cursor?.firstBatch;
         if (Array.isArray(docsTodayBatch) && docsTodayBatch.length > 0) {
@@ -59,7 +59,7 @@ export async function GET(req: Request) {
           find: collection,
           filter: { month: tmMonth, day: tmDay },
           sort: { month: 1, day: 1 },
-        });
+        }) as any;
 
         const docsTomorrowBatch = resultTomorrow?.cursor?.firstBatch;
         if (Array.isArray(docsTomorrowBatch) && docsTomorrowBatch.length > 0) {
