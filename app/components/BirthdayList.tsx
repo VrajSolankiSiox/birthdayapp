@@ -21,7 +21,9 @@ export function BirthdayList({ birthdays }: { birthdays: Birthday[] }) {
   };
 
   const getMonthName = (month: number) => {
-    return new Date(2000, month - 1, 1).toLocaleString('default', { month: 'short' });
+    return new Date(2000, month - 1, 1).toLocaleString("default", {
+      month: "short",
+    });
   };
 
   // Sort by upcoming
@@ -58,15 +60,23 @@ export function BirthdayList({ birthdays }: { birthdays: Birthday[] }) {
             return (
               <div
                 key={b.id}
-                className={`group flex flex-col sm:flex-row sm:items-center justify-between p-5 rounded-2xl transition-all border ${isToday
-                  ? 'border-[#FF3737]/20 bg-[#FF3737]/[0.03] shadow-sm shadow-[#FF3737]/5'
-                  : 'border-gray-100 hover:border-gray-200 hover:shadow-sm hover:shadow-gray-100/50 bg-white'
-                  }`}
+                className={`group flex flex-col sm:flex-row sm:items-center justify-between p-5 rounded-2xl transition-all border ${
+                  isToday
+                    ? "border-[#FF3737]/20 bg-[#FF3737]/[0.03] shadow-sm shadow-[#FF3737]/5"
+                    : "border-gray-100 hover:border-gray-200 hover:shadow-sm hover:shadow-gray-100/50 bg-white"
+                }`}
               >
                 <div className="flex gap-4 items-center">
-                  <div className={`w-14 h-14 rounded-2xl flex flex-col items-center justify-center font-bold shadow-sm ${isToday ? 'bg-[#FF3737] text-white shadow-lg shadow-[#FF3737]/30' : 'bg-gray-50 text-gray-900 border border-gray-100'
-                    }`}>
-                    <span className="text-[10px] uppercase opacity-80 leading-none mb-1 tracking-wider">{getMonthName(b.month)}</span>
+                  <div
+                    className={`w-14 h-14 rounded-2xl flex flex-col items-center justify-center font-bold shadow-sm ${
+                      isToday
+                        ? "bg-[#FF3737] text-white shadow-lg shadow-[#FF3737]/30"
+                        : "bg-gray-50 text-gray-900 border border-gray-100"
+                    }`}
+                  >
+                    <span className="text-[10px] uppercase opacity-80 leading-none mb-1 tracking-wider">
+                      {getMonthName(b.month)}
+                    </span>
                     <span className="text-xl leading-none">{b.day}</span>
                   </div>
 
@@ -100,8 +110,12 @@ export function BirthdayList({ birthdays }: { birthdays: Birthday[] }) {
 
                 <div className="mt-3 sm:mt-0 text-right shrink-0">
                   {!isToday ? (
-                    <span className="text-[13px] font-bold text-gray-400 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100"
-                      style={{ backgroundColor: daysUntil == 3 ? "#cc273dff" : "", color: daysUntil == 3 ? "white" : "" }}
+                    <span
+                      className="text-[13px] font-bold text-gray-400 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100"
+                      style={{
+                        backgroundColor: daysUntil < 3 ? "#cc273dff" : "",
+                        color: daysUntil < 3 ? "white" : "",
+                      }}
                     >
                       In {daysUntil} days
                     </span>

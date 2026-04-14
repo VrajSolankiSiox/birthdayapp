@@ -244,11 +244,11 @@ export default function Home() {
                 Personal
               </span> */}
             </div>
-            <div className="grid md:grid-cols-[1.1fr_1.3fr] gap-8 xl:gap-12 items-start">
-              <div className="sticky top-6">
+            <div className="flex flex-col lg:flex-row gap-8">
+              <div className="w-full lg:w-[34rem] lg:max-w-[34rem] lg:flex-shrink-0 lg:sticky lg:top-6 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto lg:self-start">
                 <BirthdayForm onAdd={fetchBirthdays} />
               </div>
-              <div className="h-full">
+              <div className="flex-1 min-w-0">
                 {loading ? (
                   <div className="bg-white rounded-3xl p-8 flex flex-col items-center justify-center h-[500px] shadow-[0_20px_40px_rgb(0,0,0,0.04)] border border-gray-100">
                     <div className="w-10 h-10 border-4 border-gray-100 border-t-[#FF3737] rounded-full animate-spin"></div>
@@ -311,11 +311,11 @@ export default function Home() {
                 Professional
               </span> */}
             </div>
-            <div className="grid md:grid-cols-[1.1fr_1.3fr] gap-8 xl:gap-12 items-start">
-              <div className="sticky top-6">
+            <div className="flex flex-col lg:flex-row gap-8">
+              <div className="w-full lg:w-[34rem] lg:max-w-[34rem] lg:flex-shrink-0 lg:sticky lg:top-6 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto lg:self-start">
                 <AnniversaryForm onAdd={fetchAnniversaries} />
               </div>
-              <div className="h-full">
+              <div className="flex-1 min-w-0">
                 {loading ? (
                   <div className="bg-white rounded-3xl p-8 flex flex-col items-center justify-center h-[500px] shadow-[0_20px_40px_rgb(0,0,0,0.04)] border border-gray-100">
                     <div className="w-10 h-10 border-4 border-gray-100 border-t-[#4f46e5] rounded-full animate-spin"></div>

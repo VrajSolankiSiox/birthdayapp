@@ -127,8 +127,8 @@ export function AnniversaryList({
                     <span
                       className="text-[13px] font-bold text-gray-400 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100"
                       style={{
-                        backgroundColor: daysUntil == 3 ? "#4f46e5" : "",
-                        color: daysUntil == 3 ? "white" : "",
+                        backgroundColor: daysUntil < 3 ? "#4f46e5" : "",
+                        color: daysUntil < 3 ? "white" : "",
                       }}
                     >
                       In {daysUntil} days

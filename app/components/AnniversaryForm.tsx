@@ -370,7 +370,7 @@ export function AnniversaryForm({ onAdd }: { onAdd: () => void }) {
           </div>
         )}
 
-        <div className="pt-2">
+        <div className="pt-2 sticky bottom-0 bg-white pb-4">
           <button
             disabled={loading}
             className="w-full bg-[#4f46e5] hover:bg-[#4338ca] text-white font-semibold rounded-2xl py-4 transition-all hover:shadow-[0_8px_20px_rgb(79,70,229,0.3)] hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2 relative shadow-lg shadow-[#4f46e5]/20"
