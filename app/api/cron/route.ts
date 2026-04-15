@@ -12,49 +12,20 @@ export async function GET(req: Request) {
     }
 
     // 2. Determine dates
-    const todayDate = new Date();
-    const tDay = todayDate.getDate();
-    const tMonth = todayDate.getMonth() + 1;
-
     const tomorrowDate = new Date();
     tomorrowDate.setDate(tomorrowDate.getDate() + 1);
     const tmDay = tomorrowDate.getDate();
     const tmMonth = tomorrowDate.getMonth() + 1;
 
-    // 3. Find birthdays & anniversaries for today & tomorrow
-    const [birthdaysToday, birthdaysTomorrow] = await Promise.all([
-      prisma.birthday.findMany({ where: { month: tMonth, day: tDay } }),
-      prisma.birthday.findMany({ where: { month: tmMonth, day: tmDay } })
-    ]);
+    // 3. Find birthdays & anniversaries for tomorrow
+    const birthdaysTomorrow = await prisma.birthday.findMany({ where: { month: tmMonth, day: tmDay } });
 
     // Fetch anniversaries using raw query (handles multiple collection names)
-    let anniversariesToday: any[] = [];
     let anniversariesTomorrow: any[] = [];
 
     const collectionNames = ["anniversaries", "Anniversary", "anniversary"];
     for (const collection of collectionNames) {
       try {
-        const resultToday = await prisma.$runCommandRaw({
-          find: collection,
-          filter: { month: tMonth, day: tDay },
-          sort: { month: 1, day: 1 },
-        }) as any;
-
-        const docsTodayBatch = resultToday?.cursor?.firstBatch;
-        if (Array.isArray(docsTodayBatch) && docsTodayBatch.length > 0) {
-          anniversariesToday = docsTodayBatch.map((doc: any) => ({
-            id: doc._id?.toString() ?? doc.id,
-            name: doc.name ?? "",
-            email: doc.email ?? "",
-            company: doc.company ?? "",
-            jobTitle: doc.jobTitle ?? "",
-            department: doc.department ?? doc.sector ?? "",
-            month: doc.month,
-            day: doc.day,
-            year: doc.year ?? undefined,
-          }));
-        }
-
         const resultTomorrow = await prisma.$runCommandRaw({
           find: collection,
           filter: { month: tmMonth, day: tmDay },
@@ -76,7 +47,7 @@ export async function GET(req: Request) {
           }));
         }
 
-        if (anniversariesToday.length > 0 || anniversariesTomorrow.length > 0) {
+        if (anniversariesTomorrow.length > 0) {
           break;
         }
       } catch (error) {
@@ -85,14 +56,12 @@ export async function GET(req: Request) {
     }
 
     const allAlerts = [
-      ...birthdaysToday.map(b => ({ ...b, isToday: true, type: 'birthday' })),
       ...birthdaysTomorrow.map(b => ({ ...b, isToday: false, type: 'birthday' })),
-      ...anniversariesToday.map(a => ({ ...a, isToday: true, type: 'anniversary' })),
       ...anniversariesTomorrow.map(a => ({ ...a, isToday: false, type: 'anniversary' }))
     ];
 
     if (allAlerts.length === 0) {
-      return NextResponse.json({ success: true, message: 'No birthdays or anniversaries today or tomorrow.' });
+      return NextResponse.json({ success: true, message: 'No birthdays or anniversaries tomorrow.' });
     }
 
     // 4. Configure Email Transporter via OAuth2
