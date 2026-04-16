@@ -1,7 +1,5 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import nodemailer from 'nodemailer';
-import { google } from 'googleapis';
 
 export async function GET(req: Request) {
   try {
@@ -64,54 +62,31 @@ export async function GET(req: Request) {
       return NextResponse.json({ success: true, message: 'No birthdays or anniversaries tomorrow.' });
     }
 
-    // 4. Configure Email Transporter via OAuth2
-    const OAuth2 = google.auth.OAuth2;
-    const oauth2Client = new OAuth2(
-      process.env.GOOGLE_CLIENT_ID,
-      process.env.GOOGLE_CLIENT_SECRET,
-      "https://developers.google.com/oauthplayground"
-    );
+    // 4. Validate Brevo config
+    if (!process.env.BREVO_API_KEY) {
+      return NextResponse.json({ success: false, message: 'BREVO_API_KEY is not configured in .env' });
+    }
 
-    oauth2Client.setCredentials({
-      refresh_token: process.env.GOOGLE_REFRESH_TOKEN
-    });
-
-    const accessToken = await new Promise((resolve, reject) => {
-      oauth2Client.getAccessToken((err, token) => {
-        if (err) {
-          reject("Failed to create access token: " + err);
-        }
-        resolve(token);
-      });
-    });
-
-    const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        type: 'OAuth2',
-        user: process.env.GOOGLE_EMAIL,
-        accessToken: accessToken as string,
-        clientId: process.env.GOOGLE_CLIENT_ID,
-        clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-        refreshToken: process.env.GOOGLE_REFRESH_TOKEN
-      }
-    });
-
-    // 5. Send Emails
-    let emailsSent = 0;
     const targetEmailEnv = process.env.TARGET_EMAIL;
-
     if (!targetEmailEnv) {
       return NextResponse.json({ success: false, message: 'TARGET_EMAIL is not configured in .env' });
     }
 
-    const targetEmail = targetEmailEnv.split(',').map((e) => e.trim()).filter(Boolean).join(', ');
+    const targetEmails = targetEmailEnv
+      .split(',')
+      .map((e) => e.trim())
+      .filter(Boolean)
+      .map((email) => ({ email }));
+
     const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+    // 5. Send Emails via Brevo
+    let emailsSent = 0;
 
     for (const alert of allAlerts) {
       const dayWord = alert.isToday ? "today" : "tomorrow";
       const dateText = `${monthNames[alert.month - 1]} ${alert.day}`;
-      
+
       // Calculate years of service for anniversaries
       let yearsOfService = "";
       if (alert.type === 'anniversary' && alert.year) {
@@ -121,7 +96,7 @@ export async function GET(req: Request) {
       }
 
       // Dynamic Theme based on type and timing
-      let titleColor, bgColor, titleText, subjectText, emailBody;
+      let titleColor: string, bgColor: string, titleText: string, subjectText: string, emailBody: string;
 
       if (alert.type === 'birthday') {
         titleColor = alert.isToday ? "#ff6b6b" : "#f97316";
@@ -137,109 +112,130 @@ export async function GET(req: Request) {
         emailBody = `${alert.name}'s Work Anniversary${yearsOfService}`;
       }
 
+      const htmlContent = alert.type === 'birthday'
+        ? `<!DOCTYPE html>
+            <html>
+            <head>
+              <meta charset="utf-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <meta name="color-scheme" content="light">
+            </head>
+            <body style="margin: 0; padding: 0; background-color: #f4f6f8;">
+              <div style="font-family: 'Segoe UI', Arial, sans-serif; background-color: #f4f6f8; padding: 15px;">
+                <div style="max-width: 500px; margin: 0 auto; background: #ffffff; border-radius: 12px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); text-align: center; border-top: 6px solid ${titleColor};">
+                  
+                  <div style="background-color: ${bgColor}; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                      <h1 style="color: ${titleColor}; margin: 0; font-size: 22px;">${titleText}</h1>
+                  </div>
+                  
+                  <p style="font-size: 16px; color: #555; margin: 20px 0;">
+                    Just a quick reminder that ${dayWord} (<strong style="color: ${titleColor};">${dateText}</strong>) is
+                  </p>
+                  
+                  <p style="font-size: 26px; font-weight: 800; color: #222; margin: 10px 0;">
+                    ${emailBody}
+                  </p>
+                
+                  <hr style="border: none; border-top: 1px solid #eee; margin: 25px 0;" />
+                  
+                  <p style="font-size: 13px; color: #aaa;">
+                    Best regards,<br/>
+                    <strong>Crafted by Vraj</strong>
+                  </p>
+                
+                </div>
+              </div>
+            </body>
+            </html>`
+        : `<!DOCTYPE html>
+            <html>
+            <head>
+              <meta charset="utf-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <meta name="color-scheme" content="light">
+            </head>
+            <body style="margin: 0; padding: 0; background-color: #f4f6f8;">
+              <div style="font-family: 'Segoe UI', Arial, sans-serif; background-color: #f4f6f8; padding: 15px;">
+                <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 12px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); text-align: center; border-top: 6px solid ${titleColor};">
+                  
+                  <div style="background-color: ${bgColor}; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                      <h1 style="color: ${titleColor}; margin: 0; font-size: 22px;">${titleText}</h1>
+                  </div>
+                  
+                  <p style="font-size: 16px; color: #555; margin: 20px 0;">
+                    Just a quick reminder that ${dayWord} (<strong style="color: ${titleColor};">${dateText}</strong>) is
+                  </p>
+                  
+                  <p style="font-size: 26px; font-weight: 800; color: #222; margin: 10px 0;">
+                    ${emailBody}
+                  </p>
+
+                  <div style="background-color: #f9fafb; padding: 15px; border-radius: 8px; margin: 20px 0; text-align: left;">
+                    <p style="margin: 8px 0; font-size: 14px; color: #555;">
+                      <strong>Employee:</strong> ${alert.name}
+                    </p>
+                    <p style="margin: 8px 0; font-size: 14px; color: #555;">
+                      <strong>Company:</strong> ${alert.company}
+                    </p>
+                    <p style="margin: 8px 0; font-size: 14px; color: #555;">
+                      <strong>Position:</strong> ${alert.jobTitle}
+                    </p>
+                    <p style="margin: 8px 0; font-size: 14px; color: #555;">
+                      <strong>Department:</strong> ${alert.department}
+                    </p>
+                    ${alert.year ? `<p style="margin: 8px 0; font-size: 14px; color: #555;">
+                      <strong>Years of Service:</strong> ${new Date().getFullYear() - alert.year} year${new Date().getFullYear() - alert.year > 1 ? 's' : ''}
+                    </p>` : ''}
+                  </div>
+                
+                  <hr style="border: none; border-top: 1px solid #eee; margin: 25px 0;" />
+                  
+                  <p style="font-size: 13px; color: #aaa;">
+                    Best regards,<br/>
+                    <strong>Crafted by Vraj</strong>
+                  </p>
+                
+                </div>
+              </div>
+            </body>
+            </html>`;
+
       try {
-        const htmlContent = alert.type === 'birthday' 
-          ? `<!DOCTYPE html>
-              <html>
-              <head>
-                <meta charset="utf-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <meta name="color-scheme" content="light">
-              </head>
-              <body style="margin: 0; padding: 0; background-color: #f4f6f8;">
-                <div style="font-family: 'Segoe UI', Arial, sans-serif; background-color: #f4f6f8; padding: 15px;">
-                  <div style="max-width: 500px; margin: 0 auto; background: #ffffff; border-radius: 12px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); text-align: center; border-top: 6px solid ${titleColor};">
-                    
-                    <div style="background-color: ${bgColor}; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
-                        <h1 style="color: ${titleColor}; margin: 0; font-size: 22px;">${titleText}</h1>
-                    </div>
-                    
-                    <p style="font-size: 16px; color: #555; margin: 20px 0;">
-                      Just a quick reminder that ${dayWord} (<strong style="color: ${titleColor};">${dateText}</strong>) is
-                    </p>
-                    
-                    <p style="font-size: 26px; font-weight: 800; color: #222; margin: 10px 0;">
-                      ${emailBody}
-                    </p>
-                  
-                    <hr style="border: none; border-top: 1px solid #eee; margin: 25px 0;" />
-                    
-                    <p style="font-size: 13px; color: #aaa;">
-                      Best regards,<br/>
-                      <strong>Crafted by Vraj</strong>
-                    </p>
-                  
-                  </div>
-                </div>
-              </body>
-              </html>`
-          : `<!DOCTYPE html>
-              <html>
-              <head>
-                <meta charset="utf-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <meta name="color-scheme" content="light">
-              </head>
-              <body style="margin: 0; padding: 0; background-color: #f4f6f8;">
-                <div style="font-family: 'Segoe UI', Arial, sans-serif; background-color: #f4f6f8; padding: 15px;">
-                  <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 12px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); text-align: center; border-top: 6px solid ${titleColor};">
-                    
-                    <div style="background-color: ${bgColor}; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
-                        <h1 style="color: ${titleColor}; margin: 0; font-size: 22px;">${titleText}</h1>
-                    </div>
-                    
-                    <p style="font-size: 16px; color: #555; margin: 20px 0;">
-                      Just a quick reminder that ${dayWord} (<strong style="color: ${titleColor};">${dateText}</strong>) is
-                    </p>
-                    
-                    <p style="font-size: 26px; font-weight: 800; color: #222; margin: 10px 0;">
-                      ${emailBody}
-                    </p>
-
-                    <div style="background-color: #f9fafb; padding: 15px; border-radius: 8px; margin: 20px 0; text-align: left;">
-                      <p style="margin: 8px 0; font-size: 14px; color: #555;">
-                        <strong>Employee:</strong> ${alert.name}
-                      </p>
-                      <p style="margin: 8px 0; font-size: 14px; color: #555;">
-                        <strong>Company:</strong> ${alert.company}
-                      </p>
-                      <p style="margin: 8px 0; font-size: 14px; color: #555;">
-                        <strong>Position:</strong> ${alert.jobTitle}
-                      </p>
-                      <p style="margin: 8px 0; font-size: 14px; color: #555;">
-                        <strong>Department:</strong> ${alert.department}
-                      </p>
-                      ${alert.year ? `<p style="margin: 8px 0; font-size: 14px; color: #555;">
-                        <strong>Years of Service:</strong> ${new Date().getFullYear() - alert.year} year${new Date().getFullYear() - alert.year > 1 ? 's' : ''}
-                      </p>` : ''}
-                    </div>
-                  
-                    <hr style="border: none; border-top: 1px solid #eee; margin: 25px 0;" />
-                    
-                    <p style="font-size: 13px; color: #aaa;">
-                      Best regards,<br/>
-                      <strong>Crafted by Vraj</strong>
-                    </p>
-                  
-                  </div>
-                </div>
-              </body>
-              </html>`;
-
-        await transporter.sendMail({
-          from: process.env.GOOGLE_EMAIL,
-          to: targetEmail,
-          subject: subjectText,
-          text: `Hi Team,\n\nJust a quick reminder that ${dayWord} (${dateText}) is ${emailBody}!\n\nBest regards,\nCrafted by Vraj`,
-          html: htmlContent
+        const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+          method: 'POST',
+          headers: {
+            accept: 'application/json',
+            'content-type': 'application/json',
+            'api-key': process.env.BREVO_API_KEY!,
+          },
+          body: JSON.stringify({
+            sender: {
+              name: 'Reminder App',
+              email: process.env.BREVO_SENDER_EMAIL ?? 'dev4@sioxglobal.com',
+            },
+            to: targetEmails,
+            subject: subjectText,
+            htmlContent,
+          }),
         });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          console.error(`Brevo error for ${alert.name}:`, data);
+          continue;
+        }
+
         emailsSent++;
       } catch (err) {
         console.error(`Failed to send email regarding ${alert.name}:`, err);
       }
     }
 
-    return NextResponse.json({ success: true, message: `Checked birthdays and anniversaries. Sent ${emailsSent} reminder emails to ${targetEmail}.` });
+    return NextResponse.json({
+      success: true,
+      message: `Checked birthdays and anniversaries. Sent ${emailsSent} reminder emails.`,
+    });
   } catch (error) {
     console.error('Cron job error:', error);
     return NextResponse.json({ success: false, error: 'Internal Server Error' }, { status: 500 });
