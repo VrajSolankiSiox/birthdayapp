@@ -13,26 +13,23 @@ export async function GET(req: Request) {
     const todayDate = new Date();
     const currentDayOfWeek = todayDate.getDay(); // 0 = Sun, 1 = Mon, ..., 5 = Fri, 6 = Sat
 
-    const datesToFetch: { date: Date; isToday: boolean; dayWord: string }[] = [];
-
-    // On Mon-Fri, fetch today's events.
-    if (currentDayOfWeek !== 0 && currentDayOfWeek !== 6) {
-      datesToFetch.push({ date: todayDate, isToday: true, dayWord: "today" });
+    // We do not need to run anything on Saturday since Friday handles both Sat & Sun.
+    if (currentDayOfWeek === 6) {
+      return NextResponse.json({ success: true, message: 'Saturday. No alerts scheduled to send.' });
     }
 
-    // If it's Friday, ALSO fetch Saturday and Sunday in advance.
-    if (currentDayOfWeek === 5) {
-      const saturday = new Date(todayDate);
-      saturday.setDate(saturday.getDate() + 1);
-      datesToFetch.push({ date: saturday, isToday: false, dayWord: "tomorrow" });
+    const datesToFetch: { date: Date; isToday: boolean; dayWord: string }[] = [];
 
+    // Always fetch 'tomorrow' (a day before the event)
+    const tomorrow = new Date(todayDate);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    datesToFetch.push({ date: tomorrow, isToday: false, dayWord: "tomorrow" });
+
+    // If it's Friday, ALSO fetch Sunday in advance
+    if (currentDayOfWeek === 5) {
       const sunday = new Date(todayDate);
       sunday.setDate(sunday.getDate() + 2);
       datesToFetch.push({ date: sunday, isToday: false, dayWord: "this Sunday" });
-    }
-
-    if (datesToFetch.length === 0) {
-      return NextResponse.json({ success: true, message: 'Weekend. No alerts scheduled to send.' });
     }
 
     // 3. Find birthdays & anniversaries
