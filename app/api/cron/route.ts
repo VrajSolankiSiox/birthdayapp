@@ -9,57 +9,78 @@ export async function GET(req: Request) {
       return new NextResponse('Unauthorized', { status: 401 });
     }
 
-    // 2. Determine dates
-    const tomorrowDate = new Date();
-    tomorrowDate.setDate(tomorrowDate.getDate() + 1);
-    const tmDay = tomorrowDate.getDate();
-    const tmMonth = tomorrowDate.getMonth() + 1;
+    // 2. Determine dates to fetch
+    const todayDate = new Date();
+    const currentDayOfWeek = todayDate.getDay(); // 0 = Sun, 1 = Mon, ..., 5 = Fri, 6 = Sat
 
-    // 3. Find birthdays & anniversaries for tomorrow
-    const birthdaysTomorrow = await prisma.birthday.findMany({ where: { month: tmMonth, day: tmDay } });
+    const datesToFetch: { date: Date; isToday: boolean; dayWord: string }[] = [];
 
-    // Fetch anniversaries using raw query (handles multiple collection names)
-    let anniversariesTomorrow: any[] = [];
-
-    const collectionNames = ["anniversaries", "Anniversary", "anniversary"];
-    for (const collection of collectionNames) {
-      try {
-        const resultTomorrow = await prisma.$runCommandRaw({
-          find: collection,
-          filter: { month: tmMonth, day: tmDay },
-          sort: { month: 1, day: 1 },
-        }) as any;
-
-        const docsTomorrowBatch = resultTomorrow?.cursor?.firstBatch;
-        if (Array.isArray(docsTomorrowBatch) && docsTomorrowBatch.length > 0) {
-          anniversariesTomorrow = docsTomorrowBatch.map((doc: any) => ({
-            id: doc._id?.toString() ?? doc.id,
-            name: doc.name ?? "",
-            email: doc.email ?? "",
-            company: doc.company ?? "",
-            jobTitle: doc.jobTitle ?? "",
-            department: doc.department ?? doc.sector ?? "",
-            month: doc.month,
-            day: doc.day,
-            year: doc.year ?? undefined,
-          }));
-        }
-
-        if (anniversariesTomorrow.length > 0) {
-          break;
-        }
-      } catch (error) {
-        // Ignore and try next collection name
-      }
+    // On Mon-Fri, fetch today's events.
+    if (currentDayOfWeek !== 0 && currentDayOfWeek !== 6) {
+      datesToFetch.push({ date: todayDate, isToday: true, dayWord: "today" });
     }
 
-    const allAlerts = [
-      ...birthdaysTomorrow.map(b => ({ ...b, isToday: false, type: 'birthday' })),
-      ...anniversariesTomorrow.map(a => ({ ...a, isToday: false, type: 'anniversary' }))
-    ];
+    // If it's Friday, ALSO fetch Saturday and Sunday in advance.
+    if (currentDayOfWeek === 5) {
+      const saturday = new Date(todayDate);
+      saturday.setDate(saturday.getDate() + 1);
+      datesToFetch.push({ date: saturday, isToday: false, dayWord: "tomorrow" });
+
+      const sunday = new Date(todayDate);
+      sunday.setDate(sunday.getDate() + 2);
+      datesToFetch.push({ date: sunday, isToday: false, dayWord: "this Sunday" });
+    }
+
+    if (datesToFetch.length === 0) {
+      return NextResponse.json({ success: true, message: 'Weekend. No alerts scheduled to send.' });
+    }
+
+    // 3. Find birthdays & anniversaries
+    const allAlerts: any[] = [];
+    const collectionNames = ["anniversaries", "Anniversary", "anniversary"];
+
+    for (const fetchItem of datesToFetch) {
+      const dDay = fetchItem.date.getDate();
+      const dMonth = fetchItem.date.getMonth() + 1;
+
+      // Fetch birthdays
+      const bdays = await prisma.birthday.findMany({ where: { month: dMonth, day: dDay } });
+      allAlerts.push(...bdays.map(b => ({ ...b, isToday: fetchItem.isToday, dayWord: fetchItem.dayWord, type: 'birthday' })));
+
+      // Fetch anniversaries using raw query
+      let annivs: any[] = [];
+      for (const collection of collectionNames) {
+        try {
+          const result = await prisma.$runCommandRaw({
+            find: collection,
+            filter: { month: dMonth, day: dDay },
+            sort: { month: 1, day: 1 },
+          }) as any;
+
+          const docsBatch = result?.cursor?.firstBatch;
+          if (Array.isArray(docsBatch) && docsBatch.length > 0) {
+            annivs = docsBatch.map((doc: any) => ({
+              id: doc._id?.toString() ?? doc.id,
+              name: doc.name ?? "",
+              email: doc.email ?? "",
+              company: doc.company ?? "",
+              jobTitle: doc.jobTitle ?? "",
+              department: doc.department ?? doc.sector ?? "",
+              month: doc.month,
+              day: doc.day,
+              year: doc.year ?? undefined,
+            }));
+            break;
+          }
+        } catch (error) {
+          // Ignore and try next collection name
+        }
+      }
+      allAlerts.push(...annivs.map(a => ({ ...a, isToday: fetchItem.isToday, dayWord: fetchItem.dayWord, type: 'anniversary' })));
+    }
 
     if (allAlerts.length === 0) {
-      return NextResponse.json({ success: true, message: 'No birthdays or anniversaries tomorrow.' });
+      return NextResponse.json({ success: true, message: 'No birthdays or anniversaries found for the scheduled dates.' });
     }
 
     // 4. Validate Brevo config
@@ -84,7 +105,7 @@ export async function GET(req: Request) {
     let emailsSent = 0;
 
     for (const alert of allAlerts) {
-      const dayWord = alert.isToday ? "today" : "tomorrow";
+      const dayWord = alert.dayWord;
       const dateText = `${monthNames[alert.month - 1]} ${alert.day}`;
 
       // Calculate years of service for anniversaries
@@ -101,14 +122,14 @@ export async function GET(req: Request) {
       if (alert.type === 'birthday') {
         titleColor = alert.isToday ? "#ff6b6b" : "#f97316";
         bgColor = alert.isToday ? "#fff0f0" : "#fff9f0";
-        titleText = alert.isToday ? "🎉 IT'S TODAY! 🎂" : "⏳ UPCOMING TOMORROW! 🎈";
-        subjectText = alert.isToday ? `🎈 IT'S TODAY: ${alert.name}'s Birthday!` : `⏳ Reminder: ${alert.name}'s Birthday is Tomorrow!`;
+        titleText = alert.isToday ? "🎉 IT'S TODAY! 🎂" : (alert.dayWord === "tomorrow" ? "⏳ UPCOMING TOMORROW! 🎈" : "⏳ UPCOMING THIS SUNDAY! 🎈");
+        subjectText = alert.isToday ? `🎈 IT'S TODAY: ${alert.name}'s Birthday!` : `⏳ Reminder: ${alert.name}'s Birthday is ${alert.dayWord}!`;
         emailBody = `${alert.name}'s Birthday!`;
       } else {
         titleColor = alert.isToday ? "#4f46e5" : "#06b6d4";
         bgColor = alert.isToday ? "#f0f4ff" : "#f0fdfa";
-        titleText = alert.isToday ? "🎊 CELEBRATION TODAY! 💼" : "⏳ MILESTONE TOMORROW! 🏆";
-        subjectText = alert.isToday ? `🎊 IT'S TODAY: ${alert.name}'s Work Anniversary!${yearsOfService}` : `⏳ Reminder: ${alert.name}'s Work Anniversary is Tomorrow!${yearsOfService}`;
+        titleText = alert.isToday ? "🎊 CELEBRATION TODAY! 💼" : (alert.dayWord === "tomorrow" ? "⏳ MILESTONE TOMORROW! 🏆" : "⏳ MILESTONE THIS SUNDAY! 🏆");
+        subjectText = alert.isToday ? `🎊 IT'S TODAY: ${alert.name}'s Work Anniversary!${yearsOfService}` : `⏳ Reminder: ${alert.name}'s Work Anniversary is ${alert.dayWord}!${yearsOfService}`;
         emailBody = `${alert.name}'s Work Anniversary${yearsOfService}`;
       }
 
